@@ -1,0 +1,47 @@
+import actions_with as act
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
+import user_input as u
+
+
+heap = {
+    'count': 0, #состояние калькулятора
+    'first': None, 
+    'second': None,
+    'operator': None
+}
+
+async def start_calc(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    heap['count']=1
+    await update.message.reply_text("Добро пожаловать в калькулятор!!!")
+
+async def calculate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if heap['count'] != 0:
+        if heap['count'] == 1:
+            heap['first'] = update.message.text
+            heap['count'] +=1
+        elif heap['count'] == 2:
+            heap['second'] = update.message.text
+            heap['count'] +=1
+        elif heap['count'] == 3:
+            heap['operator'] = update.message.text
+            # здесь калькулятор
+            a,b = u.inp(heap["first"], heap["second"])
+            await update.message.reply_text(f"{a} {heap['operator']} {b} = {act.action(a,b,heap['operator'])}")
+            heap['count'] = 0
+            heap['first'] = None
+            heap['second'] = None
+            heap['operator'] = None
+
+
+
+
+
+app = ApplicationBuilder().token('5956497611:AAGIGfj9D_jsA2nuSuywCFz0HfMoQ07b_Bw').build()
+print("Hello!!!")
+app.add_handler(CommandHandler("start", start_calc))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, calculate))
+
+
+
+app.run_polling()
